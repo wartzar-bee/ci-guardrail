@@ -30,6 +30,7 @@ jobs:
           fetch-depth: 0     # full history so base-branch checkout works
 
       - name: wartzar-bee Cost Guardrail
+        id: cost-guardrail          # required, or the outputs referenced below resolve blank
         uses: wartzar-bee/ci-guardrail@v1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}

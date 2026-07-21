@@ -32,10 +32,20 @@ inputs:
     description: 'Version of @wartzar-bee/tokenscope to use'
     required: false
     default: 'latest'
+  price-per-1m-tokens:
+    description: >
+      USD price per 1,000,000 tokens, used to convert the token delta into an
+      estimated dollar delta in the PR comment. The default is an approximate
+      blended input-token price — override it to match your model/provider for a
+      cost estimate that reflects your actual spend.
+    required: false
+    default: '3.00'
 
 outputs:
   cost-delta-pct:
     description: 'Predicted token-cost change as a percentage (positive = regression)'
+  cost-delta-usd:
+    description: 'Estimated USD cost change for the PR at price-per-1m-tokens (positive = more expensive)'
   head-cost-tokens:
     description: 'Estimated total tokens for the HEAD (PR) branch'
   base-cost-tokens:
@@ -53,7 +63,11 @@ runs:
 
     - name: Install tokenscope
       shell: bash
-      run: npm install -g @wartzar-bee/tokenscope@${{ inputs.tokenscope-version }}
+      env:
+        # Passed through the environment, not interpolated into the script body: a `${{ }}`
+        # expression spliced straight into `run:` is a shell-injection surface.
+        TOKENSCOPE_VERSION: ${{ inputs.tokenscope-version }}
+      run: npm install -g "@wartzar-bee/tokenscope@${TOKENSCOPE_VERSION}"
 
     - name: Run cost guardrail
       id: guardrail
@@ -63,4 +77,5 @@ runs:
         INPUT_THRESHOLD_PCT: ${{ inputs.threshold-pct }}
         INPUT_BASE_REF: ${{ inputs.base-ref }}
         INPUT_WORKING_DIR: ${{ inputs.working-directory }}
+        INPUT_PRICE_PER_1M: ${{ inputs.price-per-1m-tokens }}
       run: ${{ github.action_path }}/entrypoint.sh

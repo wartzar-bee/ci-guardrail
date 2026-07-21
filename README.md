@@ -13,6 +13,7 @@ Every agent PR is a potential cost regression. This action catches them before t
 
 - **Scans HEAD vs BASE** — estimates total token cost of your agent code on both branches
 - **Posts a PR comment** with the delta and the top token consumers (exact files)
+- **Writes a run summary** — the same report renders in the Actions run UI (`$GITHUB_STEP_SUMMARY`) on **any** event, so you see the cost table even on `push`, `workflow_dispatch`, or scheduled runs where there's no PR to comment on
 - **Blocks the build** if cost increases beyond your threshold (configurable, default 20%)
 - **Idempotent** — updates the same comment on each push, no spam
 
@@ -48,12 +49,14 @@ Add this to `.github/workflows/cost-guardrail.yml`:
 | `base-ref` | no | PR base / `main` | Branch to compare against |
 | `working-directory` | no | `.` | Directory containing agent code to analyse |
 | `tokenscope-version` | no | `latest` | Pin a specific `@wartzar-bee/tokenscope` version |
+| `price-per-1m-tokens` | no | `3.00` | USD per 1M tokens, used to show the delta in dollars. Override to match your model/provider. |
 
 ## Outputs
 
 | Output | Description |
 |--------|-------------|
 | `cost-delta-pct` | Token cost change as a percentage (positive = regression) |
+| `cost-delta-usd` | Estimated USD cost change at `price-per-1m-tokens` (positive = more expensive) |
 | `head-cost-tokens` | Estimated tokens for the PR branch |
 | `base-cost-tokens` | Estimated tokens for the base branch |
 | `blocked` | `"true"` if the build was blocked |
@@ -66,8 +69,16 @@ Add this to `.github/workflows/cost-guardrail.yml`:
     |-----------------|------------|
     | Base tokens     | 12,400     |
     | This PR tokens  | 16,200     |
-    | Delta           | **+30.6%** |
+    | Delta           | **+30.6%** (**+$0.0114**) |
     | Threshold       | 20%        |
+
+    💵 Cost estimated at $3.00/1M tokens — set `price-per-1m-tokens` to your model's price for an accurate figure.
+
+    ### Biggest cost increases (responsible files)
+    | File                      | Base   | Head   | Δ         |
+    |---------------------------|-------:|-------:|----------:|
+    | src/agent/prompts.ts      | 5,600  | 8,100  | **+2,500** |
+    | src/tools/search.ts (new) | 0      | 3,900  | **+3,900** |
 
     ### Top token consumers (HEAD)
     | File                      | Tokens |
@@ -93,7 +104,7 @@ Set `threshold-pct: 0` to always post the comment but never block:
 1. Runs `tokenscope scan --json` on the HEAD branch
 2. Fetches the base branch and runs the same scan
 3. Computes the delta percentage
-4. Posts (or updates) a PR comment with the breakdown
+4. Posts (or updates) a PR comment with the breakdown, and writes the same report to the Actions run summary (`$GITHUB_STEP_SUMMARY`)
 5. Exits non-zero if delta exceeds `threshold-pct` (and threshold > 0)
 
 ## Requirements
