@@ -1,8 +1,7 @@
 name: 'wartzar-bee CI Cost Guardrail'
-description: >
-  Predicts the token-cost delta of a PR, posts a comment with the exact lines/config
-  responsible, and optionally blocks the build if cost regresses beyond a threshold.
-  Powered by @wartzar-bee/tokenscope.
+# The GitHub Marketplace caps this at 125 characters and rejects the listing outright if it is
+# longer, so keep it on ONE line and re-count before changing it. The fuller pitch lives in README.md.
+description: "Predicts a PR's LLM token-cost delta, comments on the files responsible, and can block the build on a regression."
 
 author: 'wartzar-bee'
 
