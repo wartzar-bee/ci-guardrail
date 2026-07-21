@@ -1,0 +1,66 @@
+name: 'wartzar-bee CI Cost Guardrail'
+description: >
+  Predicts the token-cost delta of a PR, posts a comment with the exact lines/config
+  responsible, and optionally blocks the build if cost regresses beyond a threshold.
+  Powered by @wartzar-bee/tokenscope.
+
+author: 'wartzar-bee'
+
+branding:
+  icon: 'dollar-sign'
+  color: 'orange'
+
+inputs:
+  github-token:
+    description: 'GitHub token for posting PR comments (use secrets.GITHUB_TOKEN)'
+    required: true
+  threshold-pct:
+    description: >
+      Block the build if predicted token cost increases by more than this percentage
+      vs the base branch. Set to 0 to disable blocking (report-only mode).
+    required: false
+    default: '20'
+  base-ref:
+    description: 'Base branch/ref to compare against (default: PR base or main)'
+    required: false
+    default: ''
+  working-directory:
+    description: 'Directory containing the agent code to analyse'
+    required: false
+    default: '.'
+  tokenscope-version:
+    description: 'Version of @wartzar-bee/tokenscope to use'
+    required: false
+    default: 'latest'
+
+outputs:
+  cost-delta-pct:
+    description: 'Predicted token-cost change as a percentage (positive = regression)'
+  head-cost-tokens:
+    description: 'Estimated total tokens for the HEAD (PR) branch'
+  base-cost-tokens:
+    description: 'Estimated total tokens for the BASE branch'
+  blocked:
+    description: '"true" if the build was blocked due to threshold breach, else "false"'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install tokenscope
+      shell: bash
+      run: npm install -g @wartzar-bee/tokenscope@${{ inputs.tokenscope-version }}
+
+    - name: Run cost guardrail
+      id: guardrail
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        INPUT_THRESHOLD_PCT: ${{ inputs.threshold-pct }}
+        INPUT_BASE_REF: ${{ inputs.base-ref }}
+        INPUT_WORKING_DIR: ${{ inputs.working-directory }}
+      run: ${{ github.action_path }}/entrypoint.sh

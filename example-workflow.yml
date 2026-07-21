@@ -1,0 +1,51 @@
+# Example: wartzar-bee CI Cost Guardrail
+# Copy this file to .github/workflows/cost-guardrail.yml in your repo.
+#
+# What it does:
+#   - On every PR, scans your agent code with @wartzar-bee/tokenscope
+#   - Computes the token-cost delta vs the base branch
+#   - Posts a comment on the PR with the top cost drivers
+#   - Blocks the build if cost regresses more than 20% (configurable)
+#
+# Requirements:
+#   - Your agent code lives in a directory (default: repo root)
+#   - Node.js 20+ (set up automatically by the action)
+
+name: Cost Guardrail
+
+on:
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  cost-guardrail:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write   # needed to post the PR comment
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0     # full history so base-branch checkout works
+
+      - name: wartzar-bee Cost Guardrail
+        uses: wartzar-bee/ci-guardrail@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+          # Block the build if token cost increases by more than 20%.
+          # Set to 0 for report-only mode (never blocks).
+          threshold-pct: '20'
+
+          # If your agent code is in a subdirectory, set this:
+          # working-directory: 'src/agent'
+
+      # Optional: use the outputs in later steps
+      - name: Print cost summary
+        if: always()
+        run: |
+          echo "Head tokens : ${{ steps.cost-guardrail.outputs.head-cost-tokens }}"
+          echo "Base tokens : ${{ steps.cost-guardrail.outputs.base-cost-tokens }}"
+          echo "Delta       : ${{ steps.cost-guardrail.outputs.cost-delta-pct }}%"
+          echo "Blocked     : ${{ steps.cost-guardrail.outputs.blocked }}"
