@@ -1,10 +1,11 @@
 # wartzar-bee CI Cost Guardrail
 
+[![tests](https://github.com/wartzar-bee/ci-guardrail/actions/workflows/test.yml/badge.svg)](https://github.com/wartzar-bee/ci-guardrail/actions/workflows/test.yml)
 [![GitHub Marketplace](https://img.shields.io/badge/Marketplace-CI%20Cost%20Guardrail-blue?logo=github)](https://github.com/marketplace/actions/wartzar-bee-ci-cost-guardrail)
 [![npm: tokenscope](https://img.shields.io/npm/dm/@wartzar-bee/tokenscope?label=tokenscope%20installs&color=orange)](https://www.npmjs.com/package/@wartzar-bee/tokenscope)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> A GitHub Action that predicts a PR's token-cost delta, comments on the responsible lines, and can block the build on a policy.
+> A GitHub Action that predicts a PR's token-cost delta, comments on the responsible files, and can block the build on a policy.
 > Powered by [@wartzar-bee/tokenscope](https://github.com/wartzar-bee/tokenscope).
 
 ## Why

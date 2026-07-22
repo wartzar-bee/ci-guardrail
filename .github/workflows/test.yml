@@ -1,0 +1,20 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The integration suite mocks `tokenscope` and `git` on PATH, so it needs
+      # nothing but bash + python3 (both preinstalled on ubuntu-latest). It exercises
+      # entrypoint.sh end-to-end: delta math, threshold blocking, the responsible-files
+      # table, the $-denominated delta, the run-summary path, graceful degrade on an
+      # old tokenscope, and PR-number resolution from the event payload.
+      - name: Run guardrail integration tests
+        run: bash test/run-test.sh
